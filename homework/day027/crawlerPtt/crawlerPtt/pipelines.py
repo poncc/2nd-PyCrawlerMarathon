@@ -3,26 +3,22 @@
 # Define your item pipelines here
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
-# See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
+# See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 import os
 import json
 
 from pathlib import Path
 from datetime import datetime
 
-class MyprojectPipeline(object):
-    print('###Poncc-CrawlerpttPipeline')
+class CrawlerpttPipeline(object):
     def process_item(self, item, spider):
         return item
 
 
 class JSONPipeline(object):
-    print('###Poncc-JSONPipeline')
     def open_spider(self, spider):
-        print('###Poncc-open_spider-01')
         self.start_crawl_datetime = datetime.now().strftime('%Y%m%dT%H:%M:%S')
 
-        print('###Poncc-open_spider-02')
         # 在開始爬蟲的時候建立暫時的 JSON 檔案
         # 避免有多筆爬蟲結果的時候，途中發生錯誤導致程式停止會遺失所有檔案
         self.dir_path = Path(__file__).resolve().parents[1] / 'crawled_data'
@@ -66,4 +62,6 @@ class JSONPipeline(object):
         self.store_file_path = str(self.store_file_path)
         os.rename(self.runtime_file_path, self.store_file_path)
         spider.log('Save result at {}'.format(self.store_file_path))
-
+        
+        
+        

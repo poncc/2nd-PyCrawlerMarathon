@@ -11,18 +11,14 @@ from pathlib import Path
 from datetime import datetime
 
 class MyprojectPipeline(object):
-    print('###Poncc-CrawlerpttPipeline')
     def process_item(self, item, spider):
         return item
 
 
 class JSONPipeline(object):
-    print('###Poncc-JSONPipeline')
     def open_spider(self, spider):
-        print('###Poncc-open_spider-01')
         self.start_crawl_datetime = datetime.now().strftime('%Y%m%dT%H:%M:%S')
 
-        print('###Poncc-open_spider-02')
         # 在開始爬蟲的時候建立暫時的 JSON 檔案
         # 避免有多筆爬蟲結果的時候，途中發生錯誤導致程式停止會遺失所有檔案
         self.dir_path = Path(__file__).resolve().parents[1] / 'crawled_data'
@@ -63,6 +59,13 @@ class JSONPipeline(object):
         # 將暫存檔改為以日期為檔名的格式
         self.store_file_path = self.dir_path / '{}-{}.json'.format(self.start_crawl_datetime,
                                                                    self.end_crawl_datetime)
+        # 假如 PTT 爬蟲有給定存檔檔名，就使用給予的檔名
+        if spider.name == 'PTTCrawler' and spider.filename:
+            if Path(spider.filename).suffix == '.json':
+                self.store_file_path = self.dir_path / spider.filename
+            else:
+                self.store_file_path = self.dir_path / '{}.json'.format(spider.filename)
+
         self.store_file_path = str(self.store_file_path)
         os.rename(self.runtime_file_path, self.store_file_path)
         spider.log('Save result at {}'.format(self.store_file_path))
