@@ -2,14 +2,16 @@
 import scrapy
 import re
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
+from pathlib import Path
 from pprint import pprint
+from ..items import PTTArticleItem
 
-
-class CrawlerpttSpider(scrapy.Spider):
-    name = 'crawlerPTT'
-    allowed_domains = ['www.ptt.cc/']
-    start_urls = ['https://www.ptt.cc/bbs/Gossiping/M.1586617046.A.EBD.html']
+# 範例目標網址: https://www.ptt.cc/bbs/Gossiping/M.1557928779.A.0C1.html
+class PttcrawlerSpider(scrapy.Spider):
+    name = 'PTTCrawler'
+    allowed_domains = ['www.ptt.cc']
+    start_urls = ['https://www.ptt.cc/bbs/Gossiping/M.1557928779.A.0C1.html']
     cookies = {'over18': '1'}
 
     def start_requests(self):
@@ -75,7 +77,6 @@ class CrawlerpttSpider(scrapy.Spider):
             # 假如字串開頭不是特殊符號或是以 '--' 開頭的, 我們都保留其文字
             if v[0] not in [u'※', u'◆'] and v[:2] not in [u'--']:
                 filtered.append(v)
-                
 
         # 定義一些特殊符號與全形符號的過濾器
         expr = re.compile(u'[^一-龥。；，：“”（）、？《》\s\w:/-_.?~%()]')
@@ -127,14 +128,15 @@ class CrawlerpttSpider(scrapy.Spider):
         message_count = {'all': p+b+n, 'count': p-b, 'push': p, 'boo': b, 'neutral': n}
         
         # 整理文章資訊
-        data = {
-            'url': response.url,
-            'article_author': author,
-            'article_title': title,
-            'article_date': date,
-            'article_content': content,
-            'ip': ip,
-            'message_count': message_count,
-            'messages': messages
-        }
+        data = PTTArticleItem()
+        article_id = str(Path(urlparse(response.url).path).stem)
+        data['url'] = response.url
+        data['article_id'] = article_id
+        data['article_author'] = author
+        data['article_title'] = title
+        data['article_date'] = date
+        data['article_content'] = content
+        data['ip'] = ip
+        data['message_count'] = message_count
+        data['messages'] = messages
         yield data
